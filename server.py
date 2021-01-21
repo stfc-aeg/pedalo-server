@@ -2,11 +2,17 @@ import tornado.httpserver
 import tornado.websocket
 import tornado.ioloop
 import tornado.web
+import time
+from tornado.concurrent import run_on_executor
+from concurrent import futures
 
 class WSHandler(tornado.websocket.WebSocketHandler):
 
+    executor = futures.ThreadPoolExecutor(max_workers=1)
+
     def open(self):
         print("New connection")
+        self.sensor_data_pull_method()
 
     def on_message(self, message):
         print("Message received")
@@ -17,6 +23,13 @@ class WSHandler(tornado.websocket.WebSocketHandler):
 
     def check_origin(self, origin):
         return True
+
+    #TODO parametarise sleep time and While True
+    @run_on_executor
+    def sensor_data_pull_method(self):
+        while True:
+            time.sleep(2)
+            print("I am pulling")
 
 application = tornado.web.Application([(r'/', WSHandler)])
 
