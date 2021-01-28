@@ -6,6 +6,7 @@ import tornado.ioloop
 import tornado.web
 import time
 import csv
+import json
 from tornado.concurrent import run_on_executor
 from concurrent import futures
 
@@ -47,14 +48,20 @@ class WSHandler(tornado.websocket.WebSocketHandler):
         return True
 
     def messageHandler(self, message):
+        messageFromServerJson = json.loads(message)
         switch = {
-            "Test Message" : self.TestMessage
+            "Test Message" : self.TestMessage,
+            "Set offset" : self.setOffsetTemp
         }
-        func = switch.get(message, lambda: "Invalid message")
-        func()
+        func = switch.get(messageFromServerJson["Command"], lambda: "Invalid message")
+        func(messageFromServerJson["Args"])
 
-    def TestMessage(self):
+    def TestMessage(self, *args):
         self.write_message("Test Message")
+
+    def setOffsetTemp(self, *args):
+        print(args[0])
+        self.write_message("Finished")
 
 
     #TODO parametarise sleep time and While True
