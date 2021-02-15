@@ -81,10 +81,10 @@ class WSHandler(tornado.websocket.WebSocketHandler):
     def message_handler(self, message):
         message_from_serverJson = json.loads(message)
         switch = {
-            "Test Message" : self.test_message,
-            "Set offset" : self.set_offset_temp,
-            "Get temperature" : self.get_temperature,
-            "To Fahrenheit" : self.to_fahrenheit
+            "test_msg" : self.test_message,
+            "set_off_set_msg" : self.set_offset_temp,
+            "get_temp_msg" : self.get_temperature,
+            "set_temp_to_fah_msg" : self.to_fahrenheit
         }
         func = switch.get(message_from_serverJson["Command"], lambda: "Invalid message")
         func(message_from_serverJson["Args"])
