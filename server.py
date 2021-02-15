@@ -39,13 +39,13 @@ class Server(tornado.web.Application):
         else:
             self.temperature = str(random.randint(0,10))
 
-    def getTemperature(self):
+    def get_temperature(self):
         if self.fahrenheit == True:
             return (self.temperature * 9/5 + 32)
         else:
             return self.temperature
 
-    def toFahrenheit(self):
+    def to_fahrenheit(self):
         self.fahrenheit = True
 
     #TODO parametarise sleep time and While True
@@ -70,7 +70,7 @@ class WSHandler(tornado.websocket.WebSocketHandler):
 
     def on_message(self, message):
         print("Message received")
-        self.messageHandler(message)
+        self.message_handler(message)
 
     def on_close(self):
         print("Connection closed")
@@ -78,29 +78,29 @@ class WSHandler(tornado.websocket.WebSocketHandler):
     def check_origin(self, origin):
         return True
 
-    def messageHandler(self, message):
-        messageFromServerJson = json.loads(message)
+    def message_handler(self, message):
+        message_from_serverJson = json.loads(message)
         switch = {
-            "Test Message" : self.TestMessage,
-            "Set offset" : self.setOffsetTemp,
-            "Get temperature" : self.getTemperature,
-            "To Fahrenheit" : self.toFahrenheit
+            "Test Message" : self.test_message,
+            "Set offset" : self.set_offset_temp,
+            "Get temperature" : self.get_temperature,
+            "To Fahrenheit" : self.to_fahrenheit
         }
-        func = switch.get(messageFromServerJson["Command"], lambda: "Invalid message")
-        func(messageFromServerJson["Args"])
+        func = switch.get(message_from_serverJson["Command"], lambda: "Invalid message")
+        func(message_from_serverJson["Args"])
 
-    def TestMessage(self, *args):
+    def test_message(self, *args):
         self.write_message("Test Message")
 
-    def setOffsetTemp(self, *args):
+    def set_offset_temp(self, *args):
         print(args[0])
         self.write_message("Finished")
 
-    def getTemperature(self, *args):
-        self.write_message(self.server.getTemperature())
+    def get_temperature(self, *args):
+        self.write_message(self.server.get_temperature())
 
-    def toFahrenheit(self, *args):
-        self.server.toFahrenheit()
+    def to_fahrenheit(self, *args):
+        self.server.to_fahrenheit()
 
 def main():
     application = Server()
