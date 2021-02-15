@@ -38,7 +38,13 @@ class Server(tornado.web.Application):
             self.temperature = str(random.randint(0,10))
 
     def getTemperature(self):
-        return self.temperature
+        if self.fahrenheit == True:
+            return (self.temperature * 9/5 + 32)
+        else:
+            return self.temperature
+
+    def toFahrenheit(self):
+        self.fahrenheit = True
 
     #TODO parametarise sleep time and While True
     @run_on_executor
@@ -75,7 +81,8 @@ class WSHandler(tornado.websocket.WebSocketHandler):
         switch = {
             "Test Message" : self.TestMessage,
             "Set offset" : self.setOffsetTemp,
-            "Get temperature" : self.getTemperature
+            "Get temperature" : self.getTemperature,
+            "To Fahrenheit" : self.toFahrenheit
         }
         func = switch.get(messageFromServerJson["Command"], lambda: "Invalid message")
         func(messageFromServerJson["Args"])
@@ -89,6 +96,9 @@ class WSHandler(tornado.websocket.WebSocketHandler):
 
     def getTemperature(self, *args):
         self.write_message(self.server.getTemperature())
+
+    def toFahrenheit(self, *args):
+        self.server.toFahrenheit()
 
 def main():
     application = Server()
