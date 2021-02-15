@@ -17,6 +17,8 @@ class Server(tornado.web.Application):
         self.sensor_loaded = False
         self.load_sensors()
         self.temperature = 0
+        self.pull_data = True
+        self.sleep_time = 0.5
         handlers = [(r'/', WSHandler, dict(server = self))]
         super().__init__(handlers)
         self.sensor_data_pull_method()
@@ -52,11 +54,11 @@ class Server(tornado.web.Application):
         # fieldnames = ["TestStr", "TestNum"]
         # writter = csv.DictWriter(self.f, fieldnames=fieldnames)
         # writter.writeheader()
-        while True:
+        while self.pull_data:
             self.sensor_data_pull()
             # writter.writerow({"TestStr" : "Test", "TestNum" : "123"})
             # self.f.flush()
-            time.sleep(0.5)
+            time.sleep(self.sleep_time)
 
 class WSHandler(tornado.websocket.WebSocketHandler):
 
