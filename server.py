@@ -9,7 +9,8 @@ import csv
 import json
 from tornado.concurrent import run_on_executor
 from concurrent import futures
-import sensors
+import bme680sensor
+import bme280sensor
 
 class Server(tornado.web.Application):
 
@@ -25,12 +26,12 @@ class Server(tornado.web.Application):
 
     def load_sensors(self):
         try:
-            self.sensor = sensors.bme680sensor("MainSensor")
-        except sensors.bme680_not_found:
+            self.sensor = bme680sensor.bme680sensor("MainSensor")
+        except bme680sensor.bme680_not_found:
             pass
         try:
-            self.sensor = sensors.bme280sensor("MainSensor")
-        except sensors.bme280_not_found:
+            self.sensor = bme280sensor.bme280sensor("MainSensor")
+        except bme280sensor.bme280_not_found:
             pass
         if hasattr(self,"sensor"):
             self.failed_to_load_sensor = False
