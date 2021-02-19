@@ -9,12 +9,12 @@ import csv
 import json
 from tornado.concurrent import run_on_executor
 from concurrent import futures
+import sensors
 
 class Server(tornado.web.Application):
 
     def __init__(self):
         self.executor = futures.ThreadPoolExecutor(max_workers=1)
-        self.sensor_loaded = False
         self.load_sensors()
         self.temperature = 0
         self.pull_data = True
@@ -25,19 +25,28 @@ class Server(tornado.web.Application):
 
     def load_sensors(self):
         try:
-            import bme680
-            sensor = bme680.BME680(bme680.I2C_ADDR_PRIMARY)
-            sensor.set_temperature_oversample(bme680.OS_8X)
-            sensor.set_filter(bme680.FILTER_SIZE_3)
-        except:
+            self.sensor = sensors.bme680sensor("MainSensor")
+        except sensors.bme680_not_found:
             pass
-        print("Sensors are loaded")
-
-    def sensor_data_pull(self):
-        if self.sensor_loaded:
-            self.temperature = sensor.data.temperature
+        try:
+            self.sensor = sensors.bme280sensor("MainSensor")
+        except sensors.bme280_not_found:
+            pass
+        if hasattr(self,"sensor"):
+            self.failed_to_load_sensor = False
+            print("Sensor loaded")
         else:
+            self.failed_to_load_sensor = True
+            print("Sensor failed to load")
+
+        
+    def sensor_data_pull(self):
+        if self.failed_to_load_sensor:
             self.temperature = str(random.randint(0,10))
+        else:
+            self.sensor.pull_data()
+            self.temperature = self.sensor.data["Temperature"]
+
 
     def get_temperature(self):
         if self.fahrenheit == True:
@@ -56,6 +65,7 @@ class Server(tornado.web.Application):
         # writter.writeheader()
         while self.pull_data:
             self.sensor_data_pull()
+            print(self.temperature)
             # writter.writerow({"TestStr" : "Test", "TestNum" : "123"})
             # self.f.flush()
             time.sleep(self.sleep_time)
