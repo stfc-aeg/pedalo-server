@@ -9,6 +9,7 @@ from tornado.concurrent import run_on_executor
 from concurrent import futures
 import bme680sensor
 import bme280sensor
+import ds18b20sensor
 
 
 class Server(tornado.web.Application):
@@ -30,6 +31,10 @@ class Server(tornado.web.Application):
         try:
             self.sensor = bme280sensor.bme280sensor("MainSensor")
         except bme280sensor.bme280_not_found:
+            pass
+        try:
+            self.sensor = ds18b20sensor.ds18b20sensor
+        except:
             pass
         if hasattr(self, "sensor"):
             self.failed_to_load_sensor = False
