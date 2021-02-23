@@ -1,6 +1,6 @@
 import bme680
-from sensorInterface import sensor
-from smbus import SMBus
+from sensorInterface import Sensor
+
 
 class bme680sensor(Sensor):
     def __init__(self) -> None:
@@ -12,9 +12,9 @@ class bme680sensor(Sensor):
         except OSError:
             raise bme680_not_found
         self.data = {
-            "Temperature" : 0,
-            "Humidity" : 0,
-            "Pressure" : 1000
+            "Temperature": 0,
+            "Humidity": 0,
+            "Pressure": 1000
         }
 
     def pull_data(self):
@@ -24,6 +24,7 @@ class bme680sensor(Sensor):
             self.data["Pressure"] = self.me.data.pressure
         else:
             pass
+
 
 class bme680_not_found(Exception):
     pass
