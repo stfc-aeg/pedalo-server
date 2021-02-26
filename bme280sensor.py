@@ -11,6 +11,11 @@ class bme280sensor(sensor):
             self.me.update_sensor()
         except RuntimeError:
             raise bme280_not_found
+        self.data = {
+            "Temperature": 0,
+            "Humidity": 0,
+            "Pressure": 100
+        }
 
     def pull_data(self):
         self.data["Temperature"] = self.me.get_temperature()

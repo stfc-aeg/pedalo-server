@@ -22,6 +22,7 @@ class bme680sensor(Sensor):
             self.data["Temperature"] = self.me.data.temperature
             self.data["Humidity"] = self.me.data.humidity
             self.data["Pressure"] = self.me.data.pressure
+            self.data["Gas resistance"] = self.me.data.gas_resistance
         else:
             pass
 

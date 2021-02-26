@@ -9,6 +9,7 @@ from tornado.concurrent import run_on_executor
 from concurrent import futures
 import bme680sensor
 import bme280sensor
+import ds18b20sensor
 
 
 class Server(tornado.web.Application):
@@ -30,6 +31,10 @@ class Server(tornado.web.Application):
         try:
             self.sensor = bme280sensor.bme280sensor("MainSensor")
         except bme280sensor.bme280_not_found:
+            pass
+        try:
+            self.sensor = ds18b20sensor.ds18b20sensor
+        except:
             pass
         if hasattr(self, "sensor"):
             self.failed_to_load_sensor = False
@@ -92,7 +97,7 @@ class WSHandler(tornado.websocket.WebSocketHandler):
             "test_msg": self.test_message,
             "set_off_set_msg": self.set_offset_temp,
             "get_temp_msg": self.get_temperature,
-            "set_temp_to_fah_msg": self.to_fahrenheit
+            "get_gas_r_msg": self.get_gas_resistance
         }
         func = switch.get(
             message_from_serverJson["Command"],
@@ -107,10 +112,10 @@ class WSHandler(tornado.websocket.WebSocketHandler):
         self.write_message("Finished")
 
     def get_temperature(self, *args):
-        self.write_message(self.server.get_temperature())
+        self.write_message(self.server.sensor.data["Temperature"])
 
-    def to_fahrenheit(self, *args):
-        self.server.to_fahrenheit()
+    def get_gas_resistance(self, *args):
+        self.write_message(self.server.sensor.data["Gas resistance"])
 
 
 def main():
