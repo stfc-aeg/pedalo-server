@@ -1,4 +1,4 @@
-from sensorInterface import sensor
+from sensorInterface import Sensor
 import bme280
 from smbus import SMBus
 
