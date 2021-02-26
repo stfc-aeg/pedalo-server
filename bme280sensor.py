@@ -3,7 +3,7 @@ import bme280
 from smbus import SMBus
 
 
-class bme280sensor(sensor):
+class bme280sensor(Sensor):
     def __init__(self) -> None:
         super().__init__()
         try:
