@@ -1,5 +1,5 @@
 from w1thermsensor import W1ThermSensor
-from sensorInterface import Sensor
+from sensorInterface import Sensor, sensor_not_found
 
 class ds18b20sensor(Sensor):
     def __init__(self) -> None:
@@ -7,7 +7,7 @@ class ds18b20sensor(Sensor):
         try:
             self.me = W1ThermSensor()
         except:
-            pass
+            raise sensor_not_found
         self.data = {
             "Temperature": 0
         }

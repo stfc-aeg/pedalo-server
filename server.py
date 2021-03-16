@@ -1,12 +1,14 @@
-import random
+import logging
 import tornado.httpserver
 import tornado.websocket
 import tornado.ioloop
 import tornado.web
 import time
 import json
+import tornado.log
 from tornado.concurrent import run_on_executor
 from concurrent import futures
+import sensorInterface
 import bme680sensor
 import bme280sensor
 import ds18b20sensor
@@ -14,41 +16,51 @@ import ds18b20sensor
 
 class Server(tornado.web.Application):
     def __init__(self):
+        self.init_logger()
         self.executor = futures.ThreadPoolExecutor(max_workers=1)
+        self.sensor = None
         self.load_sensors()
-        self.temperature = 0
         self.pull_data = True
         self.sleep_time = 0.5
         handlers = [(r'/', WSHandler, dict(server=self))]
         super().__init__(handlers)
         self.sensor_data_pull_method()
 
+    def init_logger(self):
+        self.logger = logging.getLogger("Server")
+        self.logger.propagate = False
+        file_logger_handler = logging.FileHandler("log.txt")
+        console_logger_handler = logging.StreamHandler()
+        formater = logging.Formatter('%(asctime)s - %(levelname)s - %(message)s')
+        file_logger_handler.setFormatter(formater)
+        file_logger_handler.setLevel(logging.INFO)
+        console_logger_handler.setFormatter(formater)
+        console_logger_handler.setLevel(logging.DEBUG)
+        self.logger.addHandler(file_logger_handler)
+        self.logger.addHandler(console_logger_handler)
+        self.logger.setLevel(logging.DEBUG)
+
     def load_sensors(self):
         try:
-            self.sensor = bme680sensor.bme680sensor("MainSensor")
-        except bme680sensor.bme680_not_found:
-            pass
+            self.sensor = bme680sensor.bme680sensor()
+        except sensorInterface.sensor_not_found:
+            self.logger.warning("bme680 failed to load")
         try:
-            self.sensor = bme280sensor.bme280sensor("MainSensor")
-        except bme280sensor.bme280_not_found:
-            pass
+            self.sensor = bme280sensor.bme280sensor()
+        except sensorInterface.sensor_not_found:
+            self.logger.warning("bme280 failed to load")
         try:
-            self.sensor = ds18b20sensor.ds18b20sensor
-        except:
-            pass
-        if hasattr(self, "sensor"):
-            self.failed_to_load_sensor = False
-            print("Sensor loaded")
-        else:
-            self.failed_to_load_sensor = True
-            print("Sensor failed to load")
+            self.sensor = ds18b20sensor.ds18b20sensor()
+        except sensorInterface.sensor_not_found:
+            self.logger.warning("ds18b20sensor failed to load")
+
+        if self.sensor == None:
+            self.logger.warning("No sensors loaded")
+            self.sensor = sensorInterface.Sensor()
+            self.logger.info("Using sensor interface")
 
     def sensor_data_pull(self):
-        if self.failed_to_load_sensor:
-            self.temperature = str(random.randint(0, 10))
-        else:
             self.sensor.pull_data()
-            self.temperature = self.sensor.data["Temperature"]
 
     def get_temperature(self):
         if self.fahrenheit:
@@ -67,7 +79,7 @@ class Server(tornado.web.Application):
         # writter.writeheader()
         while self.pull_data:
             self.sensor_data_pull()
-            print(self.temperature)
+            self.logger.debug(list(self.sensor.data.keys()))
             # writter.writerow({"TestStr" : "Test", "TestNum" : "123"})
             # self.f.flush()
             time.sleep(self.sleep_time)
@@ -79,14 +91,14 @@ class WSHandler(tornado.websocket.WebSocketHandler):
         self.server = server  # type: Server
 
     def open(self):
-        print("New connection")
+        self.server.logger.info("New connection")
 
     def on_message(self, message):
-        print("Message received")
+        self.server.logger.info("Message received")
         self.message_handler(message)
 
     def on_close(self):
-        print("Connection closed")
+        self.server.logger.info("Connection closed")
 
     def check_origin(self, origin):
         return True
@@ -97,7 +109,9 @@ class WSHandler(tornado.websocket.WebSocketHandler):
             "test_msg": self.test_message,
             "set_off_set_msg": self.set_offset_temp,
             "get_temp_msg": self.get_temperature,
-            "get_gas_r_msg": self.get_gas_resistance
+            "get_gas_r_msg": self.get_gas_resistance,
+            "get_channels_msg": self.get_channels,
+            "get_data_msg": self.get_data
         }
         func = switch.get(
             message_from_serverJson["Command"],
@@ -108,14 +122,23 @@ class WSHandler(tornado.websocket.WebSocketHandler):
         self.write_message("Test Message")
 
     def set_offset_temp(self, *args):
-        print(args[0])
+        self.server.logger.debug(args[0])
         self.write_message("Finished")
 
     def get_temperature(self, *args):
-        self.write_message(self.server.sensor.data["Temperature"])
+        self.write_message(str(self.server.sensor.data["Temperature"]))
 
     def get_gas_resistance(self, *args):
-        self.write_message(self.server.sensor.data["Gas resistance"])
+        self.write_message(str(self.server.sensor.data["Gas resistance"]))
+
+    def get_channels(self, *args):
+        self.write_message(str(list(self.server.sensor.data.keys())))
+
+    def get_data(self, *args):
+        try:
+            self.write_message(str(self.server.sensor.data[args[0]]))
+        except KeyError:
+            self.write_message("No such data available")
 
 
 def main():
