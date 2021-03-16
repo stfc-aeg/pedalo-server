@@ -1,5 +1,5 @@
 import bme680
-from sensorInterface import Sensor
+from sensorInterface import Sensor, sensor_not_found
 
 
 class bme680sensor(Sensor):
@@ -8,9 +8,9 @@ class bme680sensor(Sensor):
         try:
             self.me = bme680.BME680(bme680.I2C_ADDR_PRIMARY)
         except RuntimeError:
-            raise bme680_not_found
+            raise sensor_not_found
         except OSError:
-            raise bme680_not_found
+            raise sensor_not_found
         self.data = {
             "Temperature": 0,
             "Humidity": 0,
@@ -25,7 +25,3 @@ class bme680sensor(Sensor):
             self.data["Gas resistance"] = self.me.data.gas_resistance
         else:
             pass
-
-
-class bme680_not_found(Exception):
-    pass
