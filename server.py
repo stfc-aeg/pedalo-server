@@ -3,6 +3,7 @@ import tornado.httpserver
 import tornado.websocket
 import tornado.ioloop
 import tornado.web
+import tornado.options
 import time
 import json
 import tornado.log
@@ -15,6 +16,11 @@ import ds18b20sensor
 
 
 class Server(tornado.web.Application):
+    """Class to manage the application and establish communication to sensors
+
+    Args:
+        tornado (tornado.web.Application): Base application class
+    """
     def __init__(self):
         self.init_logger()
         self.executor = futures.ThreadPoolExecutor(max_workers=1)
@@ -27,20 +33,24 @@ class Server(tornado.web.Application):
         self.sensor_data_pull_method()
 
     def init_logger(self):
-        self.logger = logging.getLogger("Server")
-        self.logger.propagate = False
-        file_logger_handler = logging.FileHandler("log.txt")
-        console_logger_handler = logging.StreamHandler()
-        formater = logging.Formatter('%(asctime)s - %(levelname)s - %(message)s')
-        file_logger_handler.setFormatter(formater)
-        file_logger_handler.setLevel(logging.INFO)
-        console_logger_handler.setFormatter(formater)
-        console_logger_handler.setLevel(logging.DEBUG)
-        self.logger.addHandler(file_logger_handler)
-        self.logger.addHandler(console_logger_handler)
+        """Configures loggers
+
+        This method configures loggers to be used in the application
+        """
+        tornado.options.parse_command_line()
+        self.logger = logging.getLogger()
         self.logger.setLevel(logging.DEBUG)
+        for handler in self.logger.handlers:
+            if isinstance(handler, logging.StreamHandler):
+                handler.setLevel(logging.DEBUG)
 
     def load_sensors(self):
+        """Load sensor classes
+
+        This method loads sensor code into the application, this
+        method will try to load all known sensor, however only one
+        of them will be used
+        """
         try:
             self.sensor = bme680sensor.bme680sensor()
         except sensorInterface.sensor_not_found:
@@ -60,16 +70,11 @@ class Server(tornado.web.Application):
             self.logger.info("Using sensor interface")
 
     def sensor_data_pull(self):
-            self.sensor.pull_data()
+        """Pulling data from sensor
 
-    def get_temperature(self):
-        if self.fahrenheit:
-            return (self.temperature * 9/5 + 32)
-        else:
-            return self.temperature
-
-    def to_fahrenheit(self):
-        self.fahrenheit = True
+        This method accesses sensor's method to pull data from sensor
+        """
+        self.sensor.pull_data()
 
     # TODO parametarise sleep time and While True
     @run_on_executor
@@ -86,6 +91,15 @@ class Server(tornado.web.Application):
 
 
 class WSHandler(tornado.websocket.WebSocketHandler):
+    """Message Handler
+
+    This Class handles the messages from Scratch3 that it recives via
+    Webscoket. It has a dictionary of messages that acts like
+    switch statement.
+
+    Args:
+        tornado (tornado.websocket.WebSocketHandler): Base tornado handler
+    """
 
     def initialize(self, server):
         self.server = server  # type: Server
@@ -104,6 +118,14 @@ class WSHandler(tornado.websocket.WebSocketHandler):
         return True
 
     def message_handler(self, message):
+        """Message handler mathod
+
+        This method will handle any messages that handler recives
+        via websocket. This method maps messages to methods within
+        handler class.
+        Args:
+            message (JSON): message from Scratch3
+        """
         message_from_serverJson = json.loads(message)
         switch = {
             "test_msg": self.test_message,
