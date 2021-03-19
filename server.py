@@ -13,6 +13,7 @@ import sensorInterface
 import bme680sensor
 import bme280sensor
 import ds18b20sensor
+import enviroplussensor
 
 
 class Server(tornado.web.Application):
@@ -63,6 +64,10 @@ class Server(tornado.web.Application):
             self.sensor = ds18b20sensor.ds18b20sensor()
         except sensorInterface.sensor_not_found:
             self.logger.warning("ds18b20sensor failed to load")
+        try:
+            self.sensor = enviroplussensor.enviroplussensor()
+        except sensorInterface.sensor_not_found:
+            self.logger.warning("enviroplussensor failed to load")
 
         if self.sensor == None:
             self.logger.warning("No sensors loaded")
@@ -84,7 +89,6 @@ class Server(tornado.web.Application):
         # writter.writeheader()
         while self.pull_data:
             self.sensor_data_pull()
-            self.logger.debug(list(self.sensor.data.keys()))
             # writter.writerow({"TestStr" : "Test", "TestNum" : "123"})
             # self.f.flush()
             time.sleep(self.sleep_time)
