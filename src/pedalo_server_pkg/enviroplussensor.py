@@ -1,10 +1,22 @@
+"""enviroplussensor sensor class that can read:
+humidity, temperature, pressure, light, oxidised, reduced, nh3
+
+Raises:
+    sensor_not_found: expection if sensor is not connected
+"""
 from sensorInterface import Sensor, sensor_not_found
 from bme280 import BME280
 from ltr559 import LTR559
 from enviroplus import gas
 
 class enviroplussensor(Sensor):
+    """enviroplus sensor class
+
+    Args:
+        Sensor (Sensor): Sensor interface
+    """
     def __init__(self) -> None:
+        # TODO docstring
         super().__init__()
         try:
             self.bme280 = BME280()
@@ -23,6 +35,8 @@ class enviroplussensor(Sensor):
         }
 
     def pull_data(self):
+        """Get data from sensor and save to to dictionary
+        """
         self.data["Temperature"] = self.bme280.get_temperature()
         self.data["Pressure"] = self.bme280.get_pressure()
         self.data["Humidity"] = self.bme280.get_humidity()
@@ -30,7 +44,3 @@ class enviroplussensor(Sensor):
         self.data["Oxidised"] = self.gas.read_oxidising()
         self.data["Reduced"] = self.gas.read_reducing()
         self.data["Nh3"] = self.gas.read_nh3()
-
-
-
-

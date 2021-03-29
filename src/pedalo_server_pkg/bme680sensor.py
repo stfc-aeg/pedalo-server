@@ -1,9 +1,21 @@
+"""BME680 sensor class that can read:
+humidity, temperature, pressure, gas resistance
+
+Raises:
+    sensor_not_found: expection if sensor is not connected
+"""
 import bme680
 from sensorInterface import Sensor, sensor_not_found
 
 
 class bme680sensor(Sensor):
+    """bme680 class
+
+    Args:
+        Sensor (Sensor): Sensor interface
+    """
     def __init__(self) -> None:
+        # TODO docstring
         super().__init__()
         try:
             self.me = bme680.BME680(bme680.I2C_ADDR_PRIMARY)
@@ -18,6 +30,8 @@ class bme680sensor(Sensor):
         }
 
     def pull_data(self):
+        """Get data from sensor and save to to dictionary
+        """
         if (self.me.get_sensor_data()):
             self.data["Temperature"] = self.me.data.temperature
             self.data["Humidity"] = self.me.data.humidity
