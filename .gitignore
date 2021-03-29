@@ -1,3 +1,7 @@
 test.csv
 todo.txt
 __pycache__
+.vscode
+build
+dist
+*/pedalo_server.egg-info
