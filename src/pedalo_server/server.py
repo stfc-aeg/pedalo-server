@@ -17,11 +17,11 @@ import tornado.log
 from tornado.concurrent import run_on_executor
 from concurrent import futures
 from .handlers import WSHandler
-import sensorInterface
-import bme680sensor
-import bme280sensor
-import ds18b20sensor
-import enviroplussensor
+from .sensors.bme280 import bme280sensor 
+from .sensors.ds18b20 import ds18b20sensor 
+from .sensors.enviroplus import enviroplussensor 
+from .sensors.bme680 import bme680sensor
+from .sensors.sensor import sensor_not_found
 
 
 class Server(tornado.web.Application):
@@ -66,33 +66,34 @@ class Server(tornado.web.Application):
         of them will be used
         """
         try:
-            self.sensor = bme680sensor.bme680sensor()
-        except sensorInterface.sensor_not_found:
+            self.sensor = bme680sensor()
+        except sensor_not_found:
             self.logger.info("bme680 not found")
         try:
-            self.sensor = bme280sensor.bme280sensor()
-        except sensorInterface.sensor_not_found:
+            self.sensor = bme280sensor()
+        except sensor_not_found:
             self.logger.info("bme280 not found")
         try:
-            self.sensor = ds18b20sensor.ds18b20sensor()
-        except sensorInterface.sensor_not_found:
+            self.sensor = ds18b20sensor()
+        except sensor_not_found:
             self.logger.info("ds18b20sensor not found")
         try:
-            self.sensor = enviroplussensor.enviroplussensor()
-        except sensorInterface.sensor_not_found:
+            self.sensor = enviroplussensor()
+        except sensor_not_found:
             self.logger.info("enviroplussensor not found")
 
-        if self.sensor == None:
-            self.logger.warning("No sensor loaded")
-            self.sensor = sensorInterface.Sensor()
-            self.logger.info("Using sensor interface")
+        # if self.sensor == None:
+        #     self.logger.warning("No sensor loaded")
+        #     self.sensor = Sensor()
+        #     self.logger.info("Using sensor interface")
 
     def sensor_data_pull(self):
         """Pull data from sensor
 
         This method accesses sensor's method to pull data from sensor
         """
-        self.sensor.pull_data()
+        if self.sensor:
+            self.sensor.pull_data()
 
     # TODO implement writing to csv file
     # TODO only write subset of data to csv
@@ -121,7 +122,3 @@ def main():
     application.listen(8888)
     print("*** Websocket Server Started")
     tornado.ioloop.IOLoop.instance().start()
-
-
-if __name__ == "__main__":
-    main()

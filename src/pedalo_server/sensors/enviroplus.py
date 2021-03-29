@@ -4,7 +4,7 @@ humidity, temperature, pressure, light, oxidised, reduced, nh3
 Raises:
     sensor_not_found: expection if sensor is not connected
 """
-from sensorInterface import Sensor, sensor_not_found
+from .sensor import Sensor, sensor_not_found
 from bme280 import BME280
 from ltr559 import LTR559
 from enviroplus import gas
