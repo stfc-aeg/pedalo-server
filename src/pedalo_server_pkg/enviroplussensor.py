@@ -16,7 +16,14 @@ class enviroplussensor(Sensor):
         Sensor (Sensor): Sensor interface
     """
     def __init__(self) -> None:
-        # TODO docstring
+        """Initiate sensor object
+
+        This is initiate method which creates sensor object
+        and creates a list of channels that the sensor will use
+
+        Raises:
+            sensor_not_found: raised when sensor cannot be found
+        """
         super().__init__()
         try:
             self.bme280 = BME280()

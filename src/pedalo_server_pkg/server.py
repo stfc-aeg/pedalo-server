@@ -31,8 +31,10 @@ class Server(tornado.web.Application):
         tornado (tornado.web.Application): Base application class
     """
     def __init__(self):
-        # TODO NEEDS DOCSTRING
-        """[summary]
+        """Initiate server object
+
+        This is initiate method which creates logger, initiates sensors
+        and attaches server handler.
         """
         self.init_logger()
         self.executor = futures.ThreadPoolExecutor(max_workers=1)
@@ -63,26 +65,25 @@ class Server(tornado.web.Application):
         method will try to load all known sensor, however only one
         of them will be used
         """
-        # TODO take away failed and replace with not found
         try:
             self.sensor = bme680sensor.bme680sensor()
         except sensorInterface.sensor_not_found:
-            self.logger.info("bme680 failed to load")
+            self.logger.info("bme680 not found")
         try:
             self.sensor = bme280sensor.bme280sensor()
         except sensorInterface.sensor_not_found:
-            self.logger.info("bme280 failed to load")
+            self.logger.info("bme280 not found")
         try:
             self.sensor = ds18b20sensor.ds18b20sensor()
         except sensorInterface.sensor_not_found:
-            self.logger.info("ds18b20sensor failed to load")
+            self.logger.info("ds18b20sensor not found")
         try:
             self.sensor = enviroplussensor.enviroplussensor()
         except sensorInterface.sensor_not_found:
-            self.logger.info("enviroplussensor failed to load")
+            self.logger.info("enviroplussensor not found")
 
         if self.sensor == None:
-            self.logger.warning("No sensors loaded")
+            self.logger.warning("No sensor loaded")
             self.sensor = sensorInterface.Sensor()
             self.logger.info("Using sensor interface")
 
@@ -110,8 +111,12 @@ class Server(tornado.web.Application):
             # writter.writerow({"TestStr" : "Test", "TestNum" : "123"})
             # self.f.flush()
             time.sleep(self.sleep_time)
-# TODO docstring
+
 def main():
+    """Start server
+
+    This is main function that creates server object and sets it on port 8888
+    """
     application = Server()
     application.listen(8888)
     print("*** Websocket Server Started")
