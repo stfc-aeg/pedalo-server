@@ -4,7 +4,7 @@ humidity, temperature, pressure, gas resistance
 Raises:
     sensor_not_found: expection if sensor is not connected
 """
-import bme680
+from bme680 import BME680
 from .sensor import Sensor, sensor_not_found
 
 
@@ -25,7 +25,7 @@ class bme680sensor(Sensor):
         """
         super().__init__()
         try:
-            self.me = bme680.BME680(bme680.I2C_ADDR_PRIMARY)
+            self.me = BME680()
         except RuntimeError:
             raise sensor_not_found
         except OSError:

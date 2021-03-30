@@ -5,8 +5,7 @@ Raises:
     sensor_not_found: expection if sensor is not connected
 """
 from .sensor import Sensor, sensor_not_found
-import bme280
-from smbus import SMBus
+from bme280 import BME280
 
 
 class bme280sensor(Sensor):
@@ -26,7 +25,7 @@ class bme280sensor(Sensor):
         """
         super().__init__()
         try:
-            self.me = bme280.BME280(i2c_dev=SMBus(1))
+            self.me = BME280()
             self.me.update_sensor()
         except RuntimeError:
             raise sensor_not_found
