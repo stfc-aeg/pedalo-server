@@ -5,7 +5,7 @@ Raises:
     sensor_not_found: expection if sensor is not connected
 """
 import bme680
-from sensorInterface import Sensor, sensor_not_found
+from .sensor import Sensor, sensor_not_found
 
 
 class bme680sensor(Sensor):

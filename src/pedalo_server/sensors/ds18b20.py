@@ -1,16 +1,14 @@
-"""BME280 sensor class that can read:
-humidity, temperature, pressure.
+"""ds18b20sensor sensor class that can read:
+humidity and it is waterproof
 
 Raises:
     sensor_not_found: expection if sensor is not connected
 """
-from sensorInterface import Sensor, sensor_not_found
-import bme280
-from smbus import SMBus
+from w1thermsensor import W1ThermSensor
+from .sensor import Sensor, sensor_not_found
 
-
-class bme280sensor(Sensor):
-    """bme280 class
+class ds18b20sensor(Sensor):
+    """ds18b20 sensor class
 
     Args:
         Sensor (Sensor): Sensor interface
@@ -26,19 +24,14 @@ class bme280sensor(Sensor):
         """
         super().__init__()
         try:
-            self.me = bme280.BME280(i2c_dev=SMBus(1))
-            self.me.update_sensor()
-        except RuntimeError:
+            self.me = W1ThermSensor()
+        except:
             raise sensor_not_found
         self.data = {
-            "Temperature": 0,
-            "Humidity": 0,
-            "Pressure": 100
+            "Temperature": 0
         }
 
     def pull_data(self):
         """Get data from sensor and save to to dictionary
         """
         self.data["Temperature"] = self.me.get_temperature()
-        self.data["Humidity"] = self.me.get_humidity()
-        self.data["Pressure"] = self.me.get_pressure()
