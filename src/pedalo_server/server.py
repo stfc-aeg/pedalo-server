@@ -8,6 +8,7 @@ data from them.
 Vladimir Garanin, STFC Detector Systems Software Group
 """
 import logging
+import csv
 import tornado.httpserver
 import tornado.ioloop
 import tornado.web
@@ -41,7 +42,7 @@ class Server(tornado.web.Application):
         self.sensor = None
         self.load_sensors()
         self.pull_data = True
-        self.sleep_time = 0.5
+        self.sleep_time = 1
         handlers = [(r'/', WSHandler, dict(server=self))]
         super().__init__(handlers)
         self.sensor_data_pull_method()
@@ -95,23 +96,23 @@ class Server(tornado.web.Application):
         if self.sensor:
             self.sensor.pull_data()
 
-    # TODO implement writing to csv file
-    # TODO only write subset of data to csv
-    # TODO But pull every second
     @run_on_executor
     def sensor_data_pull_method(self):
         """Write to cvs file
 
         This methods will write all data to csv file every ""self.sleep_time"
         """
-        # fieldnames = ["TestStr", "TestNum"]
-        # writter = csv.DictWriter(self.f, fieldnames=fieldnames)
-        # writter.writeheader()
-        while self.pull_data:
-            self.sensor_data_pull()
-            # writter.writerow({"TestStr" : "Test", "TestNum" : "123"})
-            # self.f.flush()
-            time.sleep(self.sleep_time)
+        self.sensor_data_pull()
+        counter =+1
+        if counter == 5:
+            counter = 0
+            with open ("teststing.csv", 'a') as csvfile:
+                fieldnames = ["Temperature", "Time"]
+                writter = csv.DictWriter(csvfile, fieldnames=fieldnames)
+                writter.writeheader()
+                writter.writerow({"Temperature" : self.sensor.data['Temperature'], "Time" : self.sensor.data["Time"]})
+                csvfile.flush()
+        time.sleep(self.sleep_time)
 
 def main():
     """Start server
