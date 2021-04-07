@@ -31,6 +31,7 @@ class bme680sensor(Sensor):
         except OSError:
             raise sensor_not_found
         self.data = {
+            "Time": 0,
             "Temperature": 0,
             "Humidity": 0,
             "Pressure": 1000
@@ -40,6 +41,7 @@ class bme680sensor(Sensor):
         """Get data from sensor and save to to dictionary
         """
         if (self.me.get_sensor_data()):
+            self.data["Time"] += 1
             self.data["Temperature"] = self.me.data.temperature
             self.data["Humidity"] = self.me.data.humidity
             self.data["Pressure"] = self.me.data.pressure
