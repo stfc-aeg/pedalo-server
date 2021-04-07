@@ -102,17 +102,24 @@ class Server(tornado.web.Application):
 
         This methods will write all data to csv file every ""self.sleep_time"
         """
-        self.sensor_data_pull()
-        counter =+1
-        if counter == 5:
-            counter = 0
-            with open ("teststing.csv", 'a') as csvfile:
-                fieldnames = ["Temperature", "Time"]
-                writter = csv.DictWriter(csvfile, fieldnames=fieldnames)
-                writter.writeheader()
-                writter.writerow({"Temperature" : self.sensor.data['Temperature'], "Time" : self.sensor.data["Time"]})
-                csvfile.flush()
-        time.sleep(self.sleep_time)
+        counter = 0
+        header_written = False
+        while True:
+            self.sensor_data_pull()
+            counter +=1
+            print(counter)
+            if counter == 5:
+                counter = 0
+                with open ("teststing.csv", 'a') as csvfile:
+                    fieldnames = list(self.sensor.data.keys())
+                    writter = csv.DictWriter(csvfile, fieldnames=fieldnames)
+                    if header_written == False:
+                        writter.writeheader()
+                        header_written = True
+                    writter.writerow(self.sensor.data)
+                    csvfile.flush()
+                    print("CSV written")
+            time.sleep(self.sleep_time)
 
 def main():
     """Start server

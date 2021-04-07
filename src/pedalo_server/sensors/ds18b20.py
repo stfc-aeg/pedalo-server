@@ -28,10 +28,12 @@ class ds18b20sensor(Sensor):
         except:
             raise sensor_not_found
         self.data = {
+            "Time": 0,
             "Temperature": 0
         }
 
     def pull_data(self):
         """Get data from sensor and save to to dictionary
         """
+        self.data["Time"] +=1
         self.data["Temperature"] = self.me.get_temperature()

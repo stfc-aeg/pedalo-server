@@ -39,7 +39,7 @@ class bme280sensor(Sensor):
     def pull_data(self):
         """Get data from sensor and save to to dictionary
         """
-        self.data["Time"] =+ 1
+        self.data["Time"] += 1
         self.data["Temperature"] = self.me.get_temperature()
         self.data["Humidity"] = self.me.get_humidity()
         self.data["Pressure"] = self.me.get_pressure()

@@ -32,6 +32,7 @@ class enviroplussensor(Sensor):
         except:
             raise sensor_not_found
         self.data = {
+            "Time": 0,
             "Temperature": 0,
              "Pressure": 1000,
              "Humidity": 0,
@@ -44,6 +45,7 @@ class enviroplussensor(Sensor):
     def pull_data(self):
         """Get data from sensor and save to to dictionary
         """
+        self.data["Time"] +=1
         self.data["Temperature"] = self.bme280.get_temperature()
         self.data["Pressure"] = self.bme280.get_pressure()
         self.data["Humidity"] = self.bme280.get_humidity()
