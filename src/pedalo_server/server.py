@@ -7,8 +7,8 @@ data from them.
 
 Vladimir Garanin, STFC Detector Systems Software Group
 """
+import collections
 import logging
-import csv
 import tornado.httpserver
 import tornado.ioloop
 import tornado.web
@@ -17,7 +17,9 @@ import time
 import tornado.log
 from tornado.concurrent import run_on_executor
 from concurrent import futures
-from .handlers import WSHandler
+from .graph import Graphplot
+from .csvhandler import Csvfilehandler
+from .handlers import WSHandler, ImgHandler, graphHandler, listHandler
 from .sensors.bme280 import bme280sensor 
 from .sensors.ds18b20 import ds18b20sensor 
 from .sensors.enviroplus import enviroplussensor 
@@ -38,14 +40,21 @@ class Server(tornado.web.Application):
         and attaches server handler.
         """
         self.init_logger()
-        self.executor = futures.ThreadPoolExecutor(max_workers=1)
-        self.sensor = None
+        self.executor = futures.ThreadPoolExecutor(max_workers=2)
         self.load_sensors()
+        self.csvfile = Csvfilehandler("testing.csv",self.sensor)
+        self.reading = "Temperature"
+        self.graph = Graphplot(self)
         self.pull_data = True
         self.sleep_time = 1
-        handlers = [(r'/', WSHandler, dict(server=self))]
+        self.write_csv_file = True
+        handlers = [(r'/', WSHandler, dict(server=self)),
+                    (r'/image.png', ImgHandler, dict(server=self)),
+                    (r'/graph', graphHandler, dict(server=self)),
+                    (r'/list', listHandler, dict(server=self))]
         super().__init__(handlers)
         self.sensor_data_pull_method()
+        self.sensor_data_plot_method()
 
     def init_logger(self):
         """Configure logger
@@ -66,6 +75,7 @@ class Server(tornado.web.Application):
         method will try to load all known sensor, however only one
         of them will be used
         """
+        self.sensor = None
         try:
             self.sensor = bme680sensor()
         except sensor_not_found:
@@ -83,11 +93,6 @@ class Server(tornado.web.Application):
         except sensor_not_found:
             self.logger.info("enviroplussensor not found")
 
-        # if self.sensor == None:
-        #     self.logger.warning("No sensor loaded")
-        #     self.sensor = Sensor()
-        #     self.logger.info("Using sensor interface")
-
     def sensor_data_pull(self):
         """Pull data from sensor
 
@@ -100,25 +105,33 @@ class Server(tornado.web.Application):
     def sensor_data_pull_method(self):
         """Write to cvs file
 
-        This methods will write all data to csv file every ""self.sleep_time"
+        This methods will write all data to csv file every "counter" second
+        This method also saves data from sensor to in memeory queue so it can be
+        used to plot a graph.
+
         """
         counter = 0
-        header_written = False
+        self.data_in_memory = collections.deque([],20)
         while True:
             self.sensor_data_pull()
+            try:
+                self.data_in_memory.append(self.sensor.data.copy())
+            except IndexError:
+                self.data_in_memory.popleft()
+                self.data_in_memory.append(self.sensor.data.copy())
             counter +=1
-            print(counter)
-            if counter == 5:
+            if counter == 5 and self.write_csv_file:
                 counter = 0
-                with open ("teststing.csv", 'a') as csvfile:
-                    fieldnames = list(self.sensor.data.keys())
-                    writter = csv.DictWriter(csvfile, fieldnames=fieldnames)
-                    if header_written == False:
-                        writter.writeheader()
-                        header_written = True
-                    writter.writerow(self.sensor.data)
-                    csvfile.flush()
-                    print("CSV written")
+                self.csvfile.writetofile()
+                self.logger.debug("Csv file written")
+            elif counter == 5:
+                counter = 0
+            time.sleep(self.sleep_time)
+
+    @run_on_executor
+    def sensor_data_plot_method(self):
+        while True:
+            self.graph_image = self.graph.plotgraph(self.data_in_memory)
             time.sleep(self.sleep_time)
 
 def main():

@@ -10,6 +10,7 @@ from typing import TYPE_CHECKING
 if TYPE_CHECKING:
     from .server import Server
 import tornado.websocket
+import tornado.web
 import json
 
 class WSHandler(tornado.websocket.WebSocketHandler):
@@ -63,16 +64,24 @@ class WSHandler(tornado.websocket.WebSocketHandler):
         """
         # TODO handle not json method trap error
         message_from_clientJson = json.loads(message)
+        if not "Args" in message_from_clientJson:
+            message_from_clientJson["Args"] = []
         switch = {
             "get_temp_msg": self.get_temperature,
             "get_gas_r_msg": self.get_gas_resistance,
             "get_channels_msg": self.get_channels,
-            "get_data_msg": self.get_data
+            "get_data_msg": self.get_data,
+            "plot_graph_msg": self.test,
+            "change_csv_setting": self.write_csv
         }
         func = switch.get(
             message_from_clientJson["Command"],
             lambda: self.bad_call)
         func(message_from_clientJson["Args"])
+
+    def test(self, *args):
+        print("Test")
+        self.write_message("Message back")
 
     def bad_call(self):
         """Send error message to client
@@ -108,7 +117,8 @@ class WSHandler(tornado.websocket.WebSocketHandler):
 
         This methods returns all possbile sensor channels to Scratch3
         """
-        self.write_message(str(list(self.server.sensor.data.keys())))
+        dict = {'Keys' : list(self.server.sensor.data.keys())}
+        self.write_message(str(dict))
 
     def get_data(self, *args):
         """Return any chanels data
@@ -119,3 +129,78 @@ class WSHandler(tornado.websocket.WebSocketHandler):
             self.write_message(str(self.server.sensor.data[args[0]]))
         except KeyError:
             self.write_message("No such data available")
+
+    def write_csv(self,*args):
+        if args[0]:
+            self.server.write_csv_file = True
+        elif args[0] == False:
+            self.server.write_csv_file = False
+        else:
+            self.write_message("CSV file has not changed")
+            return
+        self.write_message("CSV file has not changed")
+
+class ImgHandler(tornado.web.RequestHandler):
+    """Image Handler
+
+    This class is used to display graph image to user
+    if he/she requests it in broweser.
+    Inherits from tornado.websocket.WebSocketHandler
+    """
+
+    def initialize(self, server):
+        """Init method
+
+        This is init method to link server object
+
+        Args:
+            server (Server): Main server object
+        """
+        self.server = server  # type: Server
+
+    def get(self):
+        """HTTP get method
+
+        This method is used to show graph image to the user.
+        """
+        self.set_header('Content-type', 'image/png')
+        self.set_header('Content-length', len(self.server.graph_image))
+        self.write(self.server.graph_image)
+
+class graphHandler(tornado.web.RequestHandler):
+
+    def initialize(self, server):
+        self.server = server  # type: Server
+
+    def get(self):
+        self.render("graphTemplate.html", src='http://192.168.1.159:8888/image.png')
+
+    def put(self):
+        self.server.reading=self.request.body.decode()
+
+class listHandler(tornado.web.RequestHandler):
+    """Image Handler
+
+    This class is used to display graph image to user
+    if he/she requests it in broweser.
+    Inherits from tornado.websocket.WebSocketHandler
+    """
+
+    def initialize(self, server):
+        """Init method
+
+        This is init method to link server object
+
+        Args:
+            server (Server): Main server object
+        """
+        self.server = server  # type: Server
+        self.set_header("Access-Control-Allow-Origin", "*")
+        self.set_header("Access-Control-Allow-Origin", "*")
+
+    def get(self):
+        """HTTP get method
+
+        This method is used to show graph image to the user.
+        """
+        self.write({'Keys' : list(self.server.sensor.data.keys())})

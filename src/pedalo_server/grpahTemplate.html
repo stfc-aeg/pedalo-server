@@ -1,0 +1,31 @@
+<html>
+    <head>
+        <!-- <meta http-equiv="refresh" content="1"> -->
+    </head>
+    <body>
+        <script>
+            var intervalId = window.setInterval(function(){
+                refreshImage("myimg", "{{src}}")
+            }, 1500);
+            function refreshImage(imgElement, imgURL){
+                var timestamp = new Date().getTime();
+                var el = document.getElementById(imgElement);
+                var queryString = "?t=" + timestamp;
+                el.src = imgURL + queryString;
+            };
+            function loadDoc() {
+                var xhttp = new XMLHttpRequest();
+                let e = document.getElementById("selected_graph");
+                let selected = e.value;
+                xhttp.open("PUT", "http://192.168.1.159:8888/graph", true);
+                xhttp.send(`${selected}`);
+            };
+        </script>
+        <img id="myimg" src="{{src}}"/>
+        <button onclick="loadDoc()">Test</button>
+        <select id="selected_graph">
+            <option value="Temperature">Temperature</option>
+            <option value="Humidity">Humidity</option>
+        </select>
+    </body>
+</html>

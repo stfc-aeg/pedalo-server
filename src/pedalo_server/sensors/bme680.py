@@ -4,6 +4,7 @@ humidity, temperature, pressure, gas resistance
 Raises:
     sensor_not_found: expection if sensor is not connected
 """
+import datetime
 from bme680 import BME680
 from .sensor import Sensor, sensor_not_found
 
@@ -41,7 +42,7 @@ class bme680sensor(Sensor):
         """Get data from sensor and save to to dictionary
         """
         if (self.me.get_sensor_data()):
-            self.data["Time"] += 1
+            self.data["Time"] = datetime.datetime.now().strftime("%H:%M:%S")
             self.data["Temperature"] = self.me.data.temperature
             self.data["Humidity"] = self.me.data.humidity
             self.data["Pressure"] = self.me.data.pressure
