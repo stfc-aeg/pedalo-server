@@ -111,7 +111,7 @@ class Server(tornado.web.Application):
 
         """
         counter = 0
-        self.data_in_memory = collections.deque([],20)
+        self.data_in_memory = collections.deque([],100)
         while True:
             self.sensor_data_pull()
             try:
@@ -132,6 +132,7 @@ class Server(tornado.web.Application):
     def sensor_data_plot_method(self):
         while True:
             self.graph_image = self.graph.plotgraph(self.data_in_memory)
+            self.logger.debug("Graph plotted")
             time.sleep(self.sleep_time)
 
 def main():

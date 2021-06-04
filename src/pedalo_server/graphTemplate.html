@@ -22,10 +22,10 @@
             };
         </script>
         <img id="myimg" src="{{src}}"/>
-        <button onclick="loadDoc()">Test</button>
-        <select id="selected_graph">
-            <option value="Temperature">Temperature</option>
-            <option value="Humidity">Humidity</option>
+        <select onchange="loadDoc()" id="selected_graph">
+            {% for item in items %}
+                <option value= "{{item}}">{{item}}</option>
+            {% end %}
         </select>
     </body>
 </html>

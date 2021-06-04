@@ -4,6 +4,7 @@ humidity and it is waterproof
 Raises:
     sensor_not_found: expection if sensor is not connected
 """
+import datetime
 from w1thermsensor import W1ThermSensor
 from .sensor import Sensor, sensor_not_found
 
@@ -35,5 +36,5 @@ class ds18b20sensor(Sensor):
     def pull_data(self):
         """Get data from sensor and save to to dictionary
         """
-        self.data["Time"] +=1
+        self.data["Time"] = datetime.datetime.now().strftime("%H:%M:%S")
         self.data["Temperature"] = self.me.get_temperature()

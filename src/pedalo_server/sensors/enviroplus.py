@@ -4,6 +4,7 @@ humidity, temperature, pressure, light, oxidised, reduced, nh3
 Raises:
     sensor_not_found: expection if sensor is not connected
 """
+import datetime
 from .sensor import Sensor, sensor_not_found
 from bme280 import BME280
 from ltr559 import LTR559
@@ -45,7 +46,7 @@ class enviroplussensor(Sensor):
     def pull_data(self):
         """Get data from sensor and save to to dictionary
         """
-        self.data["Time"] +=1
+        self.data["Time"] = datetime.datetime.now().strftime("%H:%M:%S")
         self.data["Temperature"] = self.bme280.get_temperature()
         self.data["Pressure"] = self.bme280.get_pressure()
         self.data["Humidity"] = self.bme280.get_humidity()

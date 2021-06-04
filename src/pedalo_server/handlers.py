@@ -71,7 +71,7 @@ class WSHandler(tornado.websocket.WebSocketHandler):
             "get_gas_r_msg": self.get_gas_resistance,
             "get_channels_msg": self.get_channels,
             "get_data_msg": self.get_data,
-            "plot_graph_msg": self.test,
+            "plot_graph_msg": self.plot_graph,
             "change_csv_setting": self.write_csv
         }
         func = switch.get(
@@ -79,8 +79,11 @@ class WSHandler(tornado.websocket.WebSocketHandler):
             lambda: self.bad_call)
         func(message_from_clientJson["Args"])
 
-    def test(self, *args):
-        print("Test")
+    def plot_graph(self, *args):
+        """Test funciton to see if client can open a new broweser tab
+
+        This method is used to test extra functionality on the client side.
+        """
         self.write_message("Message back")
 
     def bad_call(self):
@@ -170,12 +173,27 @@ class ImgHandler(tornado.web.RequestHandler):
 class graphHandler(tornado.web.RequestHandler):
 
     def initialize(self, server):
+        """Init method
+
+        This is init method to link server object
+
+        Args:
+            server (Server): Main server object
+        """
         self.server = server  # type: Server
 
     def get(self):
-        self.render("graphTemplate.html", src='http://192.168.1.159:8888/image.png')
+        """HTTP get method
+
+        This method is used to reader a graph page to the user.
+        """
+        self.render("graphTemplate.html", src='localhost:8888/image.png', items=list(self.server.sensor.data.keys())[1:])
 
     def put(self):
+        """HTTP put method
+
+        This method is used to chnage the desired graph reading.
+        """
         self.server.reading=self.request.body.decode()
 
 class listHandler(tornado.web.RequestHandler):
